@@ -1,0 +1,37 @@
+#!/bin/bash
+
+#I screwed up a script and accidently deleted a bunch of files from a mergerfs share
+#since the delete spanned drives a bunch of files were unrecoverable
+
+#this script will pull in files from a cold storage mount and restore the files
+#snapraid has labeled as unrecoverable.  Running a snsapraid fix after this will
+#also allow you to recover even more files through snapraid since the ones
+#this recovers will no longer be missing.
+
+#you could rsync the entire drive but then that would also restore files you deleted
+#this will only restore files that are actually missing
+
+declare -a arr
+IFS='
+'
+snaploc="pool"
+mountloc="/backups"
+drivename="storage1"
+coldname="cold$drivename"
+
+arr=( $(find /sharedfolders/pool/ -name "*.unrecoverable"))
+
+for i in "${arr[@]}"
+do
+ tmp=${i#"$snaploc"}
+ tmp=${tmp%".unrecoverable"}
+ a=$(echo "$tmp" | sed 's/ /\\ /g')
+ #echo "$tmp"
+ if [[ -e "$mountloc$coldname/$snaploc/$tmp" ]]
+ then
+   rsync -ait --progress "$mountloc$coldname/pool/$tmp" "/srv/dev-disk-by-label-$drivename/$snaploc/$tmp"
+ else
+   echo "NOT FOUND: $tmp"
+ fi
+
+done
