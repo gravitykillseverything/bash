@@ -21,7 +21,13 @@ do
     ls -l /backups/$i
     rsync -vitr --exclude=New --progress --delete "/srv/dev-disk-by-label-$tmp/" "/backups/$i"
     umount /backups/$i
-    #rm -r /backups/$i
+    if ! mountpoint -q /backups/coldstorage2
+    then
+      rm -r /backups/$i
+    else
+      echo "ERROR: drive didn't unmount"
+    fi
+
     echo "Done backing up $tmp to $i"
   fi
 done
