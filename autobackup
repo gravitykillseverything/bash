@@ -1,0 +1,27 @@
+#!/bin/bash
+
+echo "starting"
+IFS=$'\n'
+
+declare -a arr
+
+arr=( $(ls -A1 /dev/disk/by-label))
+
+#echo "${#arr[@]}"
+
+for i in "${arr[@]}"
+do
+  if [[ $i = cold* ]]
+  then
+    echo "backing up: $1"
+    tmp=${i#"cold"}
+    echo "Staring backup of $tmp to $i"
+    mkdir /backups/$i
+    mount /dev/disk/by-label/$i /backups/$i
+    ls -l /backups/$i
+    rsync -vitr --exclude=New --progress --delete "/srv/dev-disk-by-label-$tmp/" "/backups/$i"
+    umount /backups/$i
+    #rm -r /backups/$i
+    echo "Done backing up $tmp to $i"
+  fi
+done
