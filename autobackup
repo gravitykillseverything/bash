@@ -1,6 +1,5 @@
 #!/bin/bash
 
-echo "starting"
 IFS=$'\n'
 
 declare -a arr
@@ -19,7 +18,10 @@ do
     mkdir /backups/$i
     mount /dev/disk/by-label/$i /backups/$i
     ls -l /backups/$i
-    rsync -vitr --exclude=New --progress --delete "/srv/dev-disk-by-label-$tmp/" "/backups/$i"
+    #delete all empty folders before syncing
+    find /srv/dev-disk-by-label-$tmp/ -type d -empty -delete
+    #sync an
+    rsync -avir --exclude=New --progress --delete "/srv/dev-disk-by-label-$tmp/" "/backups/$i"
     umount /backups/$i
     if ! mountpoint -q /backups/coldstorage2
     then
@@ -27,7 +29,6 @@ do
     else
       echo "ERROR: drive didn't unmount"
     fi
-
     echo "Done backing up $tmp to $i"
-  fi
+  fi 
 done
