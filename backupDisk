@@ -1,0 +1,30 @@
+#!/bin/bash
+
+#first argument should be coldstoragex
+if [ $# -eq 0 ]
+then
+  echo "No arguments supplied"
+  exit 1
+fi
+
+tmp=${1#"cold"}
+
+
+echo "Starting backup of $tmp to $1"
+mkdir /backups/$1
+mount /dev/disk/by-label/$1 /backups/$1
+ls -l /backups/$1
+#delete all empty folders before syncing
+find /srv/dev-disk-by-label-$tmp/ -type d -empty -delete
+#sync an
+rsync -avrHAXh --exclude=New --info=progress2 --delete --stats "/srv/dev-disk-by-label-$tmp/" "/backups/$1"
+umount /backups/$1
+if ! mountpoint -q /backups/$1 
+then
+  rm -r /backups/$1
+else
+  echo "ERROR: drive didnt unmount"
+fi
+hdparm -y /dev/disk/by-label/$1
+echo "Done backing up $tmp to $1"
+

@@ -1,5 +1,7 @@
 #!/bin/bash
 
+
+
 IFS=$'\n'
 
 declare -a arr
@@ -12,23 +14,13 @@ for i in "${arr[@]}"
 do
   if [[ $i = cold* ]]
   then
-    echo "backing up: $1"
+    echo "Found: $i"
     tmp=${i#"cold"}
-    echo "Staring backup of $tmp to $i"
-    mkdir /backups/$i
-    mount /dev/disk/by-label/$i /backups/$i
-    ls -l /backups/$i
-    #delete all empty folders before syncing
-    find /srv/dev-disk-by-label-$tmp/ -type d -empty -delete
-    #sync an
-    rsync -avir --exclude=New --progress --delete "/srv/dev-disk-by-label-$tmp/" "/backups/$i"
-    umount /backups/$i
-    if ! mountpoint -q /backups/coldstorage2
+    if [ ! -d "/backups/$i" ]
     then
-      rm -r /backups/$i
-    else
-      echo "ERROR: drive didn't unmount"
+      echo "Launching backup of $tmp to $i"
+      
+      /projects/bash/backupDisk $i &> /sharedfolders/pool/Other/logs/$i.log &
     fi
-    echo "Done backing up $tmp to $i"
   fi 
 done
